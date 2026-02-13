@@ -15,7 +15,7 @@ def load_camera_calibration(yaml_file):
     with open(yaml_file, 'r') as f:
         data = yaml.safe_load(f)
 
-    cam_mtx = np.array(data['camera_matrix'])
-    dist = np.array(data['dist_coeff'])
+    cam_mtx = np.array(data['camera_matrix'], dtype=np.float64)
+    dist = np.array(data['dist_coeff'], dtype=np.float64)
     dist = dist.reshape(-1, 1)
     return cam_mtx, dist

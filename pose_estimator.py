@@ -1,19 +1,14 @@
 import numpy as np
 import cv2
 import pyrealsense2 as rs
+from calib import load_camera_calibration
 
 # -------- YOU MUST FILL THESE --------
 TAG_SIZE_M = 0.08   # edge length of your printed tag (meters)
 
-# Put YOUR calibrated intrinsics here
-K = np.array([
-    [fx, 0, cx],
-    [0, fy, cy],
-    [0,  0,  1],
-], dtype=np.float64)
-
-# OpenCV distortion: [k1, k2, p1, p2, k3]
-dist = np.array([k1, k2, p1, p2, k3], dtype=np.float64)
+# Load camera calibration data
+calibration_file = "path/to/your/calibration.yaml"  # Update with the actual path to your YAML file
+K, dist = load_camera_calibration(calibration_file)
 # -------------------------------------
 
 def rvec_tvec_to_T(rvec, tvec):
