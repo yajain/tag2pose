@@ -1,6 +1,9 @@
 import numpy as np
 import cv2
 import pyrealsense2 as rs
+import rospy
+from geometry_msgs.msg import PoseStamped
+from tf_transformations import quaternion_from_matrix
 from calib import load_camera_calibration
 
 # -------- YOU MUST FILL THESE --------
@@ -40,8 +43,11 @@ cfg = rs.config()
 cfg.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
 pipeline.start(cfg)
 
+rospy.init_node("tag2pose_estimator", anonymous=True)
+pose_pub = rospy.Publisher("/tag_pose", PoseStamped, queue_size = 10)
+
 try:
-    while True:
+    while not rospy.is_shutdown():
         frames = pipeline.wait_for_frames()
         color = frames.get_color_frame()
         if not color:
@@ -73,6 +79,21 @@ try:
 
                 # Draw 5 cm axes on the tag
                 cv2.drawFrameAxes(img, K, dist, rvec, tvec, 0.05)
+
+                q_tag = quaternion_from_matrix(T_cam_tag)
+
+                pose_msg = PoseStamped()
+                pose_msg.header.stamp = rospy.Time.now()
+                pose_msg.header.frame_id = "camera_frame"
+                pose_msg.pose.position.x = tvec[0][0]
+                pose_msg.pose.position.y = tvec[1][0]
+                pose_msg.pose.position.z = tvec[2][0]
+                pose_msg.pose.orientation.x = q_tag[0]
+                pose_msg.pose.orientation.y = q_tag[1]
+                pose_msg.pose.orientation.z = q_tag[2]
+                pose_msg.pose.orientation.w = q_tag[3]
+
+                pose_pub.publish(pose_msg)
 
         cv2.imshow("AprilTag Pose", img)
         if cv2.waitKey(1) & 0xFF == 27:  # ESC
